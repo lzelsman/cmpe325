@@ -29,6 +29,8 @@ class MainWindow(QMainWindow):
 
         self.viewfinder = QCameraViewfinder()
         self.viewfinder.show()
+
+
         self.setCentralWidget(self.viewfinder)
 
         # Set the default camera.
