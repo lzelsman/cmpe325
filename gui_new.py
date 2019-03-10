@@ -27,10 +27,10 @@ class MainWindow(QMainWindow):
         mainLayout = QVBoxLayout()
 
         # Widgets for the camera portion (insert code for the camera here)
-        cameraPlaceHolder = QLabel("Camera goes here")
+        self.camera = OpenCVCamera()
         topLayout = QHBoxLayout()
         topLayout.addStretch()
-        topLayout.addWidget(CameraWidget())
+        topLayout.addWidget(self.camera)
         topLayout.addStretch()
 
 
@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         middleLayout.addStretch()
         middleLayout.addWidget(recordButton)
         middleLayout.addStretch()
+        recordButton.clicked.connect(self.recordHandler)
 
         # Widgets for the bottom layout
         label = QLabel("Translation")
@@ -56,6 +57,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(centralWidget)
 
         self.show()
+
+    def recordHandler(self):
+        self.camera.startCamera()
 
 
 class CameraWidget(QWidget):
@@ -91,8 +95,9 @@ class CameraWidget(QWidget):
 
 
 # Camera widget from openCV
-class OpenCVCamera:
+class OpenCVCamera(QWidget):
     def __init__(self):
+        super().__init__()
         self.camera = cv2.VideoCapture(0)
         self.cameraRunning = False
     
@@ -101,23 +106,15 @@ class OpenCVCamera:
         while(self.running):
             ret, feed = self.camera.read()
             grayscale = cv2.cvtColor(feed, cv2.COLOR_BGR2GRAY)
-
             cv2.imshow('feed', grayscale)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         self.camera.release()
         cv2.destroyAllWindows()
 
-
-
-
-
-
 if __name__ == '__main__':
 
-    # app = QApplication(sys.argv)
-    # app.setApplicationName("ASL to Text Editor")
-    # window = MainWindow()
-    # app.exec_()
-    app = OpenCVCamera()
-    app.startCamera()
+    app = QApplication(sys.argv)
+    app.setApplicationName("ASL to Text Editor")
+    window = MainWindow()
+    app.exec_()
