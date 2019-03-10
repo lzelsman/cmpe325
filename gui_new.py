@@ -1,3 +1,4 @@
+# Importing all the gui elements
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -5,8 +6,14 @@ from PyQt5.QtPrintSupport import *
 from PyQt5.QtMultimedia import *
 from PyQt5.QtMultimediaWidgets import *
 
+# Importing system specific utilities
 import os
 import sys
+
+# OpenCV related imports
+import cv2
+import numpy
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -83,9 +90,34 @@ class CameraWidget(QWidget):
         self.save_seq = 0
 
 
+# Camera widget from openCV
+class OpenCVCamera:
+    def __init__(self):
+        self.camera = cv2.VideoCapture(0)
+        self.cameraRunning = False
+    
+    def startCamera(self):
+        self.running =True
+        while(self.running):
+            ret, feed = self.camera.read()
+            grayscale = cv2.cvtColor(feed, cv2.COLOR_BGR2GRAY)
+
+            cv2.imshow('feed', grayscale)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        self.camera.release()
+        cv2.destroyAllWindows()
+
+
+
+
+
+
 if __name__ == '__main__':
 
-    app = QApplication(sys.argv)
-    app.setApplicationName("ASL to Text Editor")
-    window = MainWindow()
-    app.exec_()
+    # app = QApplication(sys.argv)
+    # app.setApplicationName("ASL to Text Editor")
+    # window = MainWindow()
+    # app.exec_()
+    app = OpenCVCamera()
+    app.startCamera()
