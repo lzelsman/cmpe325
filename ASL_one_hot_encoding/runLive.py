@@ -34,7 +34,8 @@ with tf.Session() as sess:
             value = (35, 35)
             blurred = cv2.GaussianBlur(grey, value, 0)
             _, thresh1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-            # cv2.imshow('title',thresh1)
+            #cv2.imshow('title',thresh1)
+            cv2.imshow('frame',img)
             thresh1 = (thresh1 * 1.0) / 255
             thresh1 = Image.fromarray(thresh1)
             thresh1 = ImageOps.fit(thresh1, [par.image_size, par.image_size])
@@ -45,5 +46,10 @@ with tf.Session() as sess:
             testImage = testImage.astype(np.float32)
             testY = sess.run(prediction, feed_dict={X: testImage, keep_prob: 1.0})
             print(testY)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
         else:
             continue
+    
+    cap.release()
+    cv2.destroyAllWindows()
