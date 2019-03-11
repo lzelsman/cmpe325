@@ -14,11 +14,11 @@ import sys
 import cv2
 import numpy
 
+FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-        # general window shit
         self.setGeometry(50,50, 700,600) #can alternatively do 10 10 900 600
         self.setWindowTitle('ASL to Text Translator')
         
@@ -44,11 +44,48 @@ class MainWindow(QMainWindow):
 
         # Widgets for the bottom layout
         label = QLabel("Translation")
-        editor = QTextEdit()
+        self.editor = QTextEdit()
         bottomLayout = QVBoxLayout()
         bottomLayout.addWidget(label)
-        bottomLayout.addWidget(editor)
+        bottomLayout.addWidget(self.editor)
 
+        # Generates tmenu bar
+        edit_toolbar = QToolBar("Edit")   
+        edit_menu = self.menuBar().addMenu("&Edit")
+
+        # Creating the undo menu bar
+        undo_action = QAction(QIcon(os.path.join('images', 'arrow-curve-180-left.png')), "Undo", self)
+        undo_action.setStatusTip("Undo last change")
+        undo_action.triggered.connect(self.editor.undo)
+        edit_menu.addAction(undo_action)
+
+        # Creating the redo on the menu bar
+        redo_action = QAction(QIcon(os.path.join('images', 'arrow-curve.png')), "Redo", self)
+        redo_action.setStatusTip("Redo last change")
+        redo_action.triggered.connect(self.editor.redo)
+        edit_toolbar.addAction(redo_action)
+        edit_menu.addAction(redo_action)
+
+        
+        # Widget to tallow us to edit text size
+        format_toolbar = QToolBar("Format")
+        format_toolbar.setIconSize(QSize(16, 16))
+        self.addToolBar(format_toolbar)
+        format_menu = self.menuBar().addMenu("&Format")
+
+        # We need references to these actions/settings to update as selection changes, so attach to self.
+        self.fonts = QFontComboBox()
+        self.fonts.currentFontChanged.connect(self.editor.setCurrentFont)
+        format_toolbar.addWidget(self.fonts)
+
+        self.fontsize = QComboBox()
+        self.fontsize.addItems([str(s) for s in FONT_SIZES])
+
+        # Connect to the signal producing the text of the current selection. Convert the string to float
+        # and set as the pointsize. We could also use the index + retrieve from FONT_SIZES.
+        self.fontsize.currentIndexChanged[str].connect(lambda s: self.editor.setFontPointSize(float(s)) )
+        format_toolbar.addWidget(self.fontsize)
+        # Menu bar stuff    
 
         mainLayout.addLayout(topLayout)
         mainLayout.addLayout(middleLayout)
@@ -60,7 +97,6 @@ class MainWindow(QMainWindow):
 
     def recordHandler(self):
         self.camera.startCamera()
-
 
 class CameraWidget(QWidget):
 
@@ -89,7 +125,6 @@ class CameraWidget(QWidget):
         self.camera.setCaptureMode(QCamera.CaptureStillImage)
         self.camera.error.connect(lambda: self.alert(self.camera.errorString()))
         self.camera.start()
-
         self.current_camera_name = self.available_cameras[i].description()
         self.save_seq = 0
 
