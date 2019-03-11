@@ -35,7 +35,9 @@ class MainWindow(QMainWindow):
 
 
         # The middle layout where the play button goes
-        recordButton = QPushButton("Record")
+        recordButton = QPushButton()
+        recordButton.setIcon(QIcon(QPixmap("./images/record-icon.png")))
+        recordButton.setIconSize(QSize(60, 60))
         middleLayout = QHBoxLayout()
         middleLayout.addStretch()
         middleLayout.addWidget(recordButton)
@@ -97,6 +99,7 @@ class MainWindow(QMainWindow):
 
     def recordHandler(self):
         self.camera.startCamera()
+    
 
 class CameraWidget(QWidget):
 
