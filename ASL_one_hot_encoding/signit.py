@@ -15,10 +15,6 @@ from PIL import ImageOps, Image
 import os
 import sys
 
-# OpenCV related imports
-import cv2
-import numpy
-
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
 class MainWindow(QMainWindow):
@@ -40,7 +36,9 @@ class MainWindow(QMainWindow):
 
 
         # The middle layout where the play button goes
-        recordButton = QPushButton("Record")
+        recordButton = QPushButton()
+        recordButton.setIcon(QIcon(QPixmap("./images/record-icon.png")))
+        recordButton.setIconSize(QSize(60, 60))
         middleLayout = QHBoxLayout()
         middleLayout.addStretch()
         middleLayout.addWidget(recordButton)
@@ -98,10 +96,19 @@ class MainWindow(QMainWindow):
         centralWidget.setLayout(mainLayout)
         self.setCentralWidget(centralWidget)
 
+        
         self.show()
+
+    def onUpdateText(self, text):
+        cursor = self.editor.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        cursor.insertText(text)
+        self.editor.setTextCursor(cursor)
+        self.editor.ensureCursorVisible()
 
     def recordHandler(self):
         #self.camera.startCamera()
+        sys.stdout = Stream(newText=self.onUpdateText)
         saver = tf.train.import_meta_graph(par.saved_path + str('501.meta'))
         with tf.Session() as sess:
             saver.restore(sess, tf.train.latest_checkpoint('./Saved/'))
@@ -151,7 +158,7 @@ class MainWindow(QMainWindow):
                         testY_previous = testY
                         testY = sess.run(prediction, feed_dict={X: testImage, keep_prob: 1.0})
                     count += 1
-                    print(testY)
+                    # print(testY)
                     # Print predicted letter, only if it has changed since the last prediction
                     for i in range(len(testY[0])):
                         if testY[0][i] != testY_previous[0][i]:
@@ -211,6 +218,12 @@ class CameraWidget(QWidget):
         self.current_camera_name = self.available_cameras[i].description()
         self.save_seq = 0
 
+
+class Stream(QObject):
+    newText = pyqtSignal(str)
+
+    def write(self, text):
+        self.newText.emit(str(text))  
 
 # Camera widget from openCV
 class OpenCVCamera(QWidget):

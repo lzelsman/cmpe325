@@ -6,13 +6,14 @@ from PyQt5.QtPrintSupport import *
 from PyQt5.QtMultimedia import *
 from PyQt5.QtMultimediaWidgets import *
 
+import numpy as np
+import tensorflow as tf
+
 # Importing system specific utilities
 import os
 import sys
-
-# OpenCV related imports
-import cv2
-import numpy
+sys.path.insert(0, './ASL_one_hot_encoding')
+from runLive import *
 
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
@@ -95,11 +96,26 @@ class MainWindow(QMainWindow):
         centralWidget.setLayout(mainLayout)
         self.setCentralWidget(centralWidget)
 
+        
+
         self.show()
 
     def recordHandler(self):
-        self.camera.startCamera()
-    
+        sys.stdout = Stream(newText=self.onUpdateText)
+        RunLive()
+
+    def onUpdateText(self, text):
+        cursor = self.editor.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        cursor.insertText(text)
+        self.editor.setTextCursor(cursor)
+        self.editor.ensureCursorVisible()
+
+class Stream(QObject):
+    newText = pyqtSignal(str)
+
+    def write(self, text):
+        self.newText.emit(str(text))    
 
 class CameraWidget(QWidget):
 
