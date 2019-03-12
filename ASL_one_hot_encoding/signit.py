@@ -9,6 +9,7 @@ import tensorflow as tf
 import parameters as par
 import cv2
 import numpy as np
+import time
 from PIL import ImageOps, Image
 
 # Importing system specific utilities
@@ -129,6 +130,8 @@ class MainWindow(QMainWindow):
 
             # Get the image
             count = 0
+            start_time = time.time()
+            letters = ["A", "B", "C", "D", "G", "I", "L", "V", "Y"]
             while 1:
                 cap = cv2.VideoCapture(0)
                 ret, img = cap.read()
@@ -158,28 +161,14 @@ class MainWindow(QMainWindow):
                         testY_previous = testY
                         testY = sess.run(prediction, feed_dict={X: testImage, keep_prob: 1.0})
                     count += 1
+                    elapsed_time = time.time() - start_time
                     # print(testY)
                     # Print predicted letter, only if it has changed since the last prediction
                     for i in range(len(testY[0])):
-                        if testY[0][i] != testY_previous[0][i]:
-                            if testY[0][0] == [1]:
-                                print("A")
-                            elif testY[0][1] == [1]: 
-                                print("B")
-                            elif testY[0][2] == [1]:
-                                print("C")
-                            elif testY[0][3] == [1]:
-                                print("D")
-                            elif testY[0][4] == [1]:
-                                print("G")
-                            elif testY[0][5] == [1]:
-                                print("I")
-                            elif testY[0][6] == [1]:
-                                print("L")
-                            elif testY[0][7] == [1]:
-                                print("V")
-                            elif testY[0][8] == [1]:
-                                print("Y")
+                        if (testY[0][i] != testY_previous[0][i]) and (elapsed_time > 2):
+                            if testY[0][i] == [1]:
+                                print(letters[i])
+                                start_time = time.time()
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
                 else:
