@@ -38,7 +38,8 @@ class MainWindow(QMainWindow):
         # The middle layout where the play button goes
         recordButton = QPushButton()
         recordButton.setIcon(QIcon(QPixmap("./images/record-icon.png")))
-        recordButton.setIconSize(QSize(60, 60))
+        recordButton.setIconSize(QSize(90, 90))
+        recordButton.setStyleSheet('QPushButton{border: 0px solid;}')
         middleLayout = QHBoxLayout()
         middleLayout.addStretch()
         middleLayout.addWidget(recordButton)
