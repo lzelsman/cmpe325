@@ -53,13 +53,16 @@ class MainWindow(QMainWindow):
         bottomLayout.addWidget(self.editor)
 
         # Generates menu bar
-        edit_toolbar = QToolBar("Edit")   
+        edit_toolbar = QToolBar("Edit")
+        edit_toolbar.setIconSize(QSize(16, 16))
+        self.addToolBar(edit_toolbar)
         edit_menu = self.menuBar().addMenu("&Edit")
 
         # Creating the undo menu bar
         undo_action = QAction(QIcon(os.path.join('images', 'arrow-curve-180-left.png')), "Undo", self)
         undo_action.setStatusTip("Undo last change")
         undo_action.triggered.connect(self.editor.undo)
+        edit_toolbar.addAction(undo_action)
         edit_menu.addAction(undo_action)
 
         # Creating the redo on the menu bar
