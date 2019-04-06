@@ -34,11 +34,11 @@ class MainWindow(QMainWindow):
         topLayout.addWidget(self.camera)
         topLayout.addStretch()
 
-
         # The middle layout where the play button goes
         recordButton = QPushButton()
         recordButton.setIcon(QIcon(QPixmap("./images/record-icon.png")))
-        recordButton.setIconSize(QSize(60, 60))
+        recordButton.setIconSize(QSize(90, 90))
+        recordButton.setStyleSheet('QPushButton{border: 0px solid;}')
         middleLayout = QHBoxLayout()
         middleLayout.addStretch()
         middleLayout.addWidget(recordButton)
@@ -52,14 +52,17 @@ class MainWindow(QMainWindow):
         bottomLayout.addWidget(label)
         bottomLayout.addWidget(self.editor)
 
-        # Generates tmenu bar
-        edit_toolbar = QToolBar("Edit")   
+        # Generates menu bar
+        edit_toolbar = QToolBar("Edit")
+        edit_toolbar.setIconSize(QSize(16, 16))
+        self.addToolBar(edit_toolbar)
         edit_menu = self.menuBar().addMenu("&Edit")
 
         # Creating the undo menu bar
         undo_action = QAction(QIcon(os.path.join('images', 'arrow-curve-180-left.png')), "Undo", self)
         undo_action.setStatusTip("Undo last change")
         undo_action.triggered.connect(self.editor.undo)
+        edit_toolbar.addAction(undo_action)
         edit_menu.addAction(undo_action)
 
         # Creating the redo on the menu bar
@@ -69,34 +72,25 @@ class MainWindow(QMainWindow):
         edit_toolbar.addAction(redo_action)
         edit_menu.addAction(redo_action)
 
-        
-        # Widget to tallow us to edit text size
+        # Widget to allow us to edit text size
         format_toolbar = QToolBar("Format")
         format_toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(format_toolbar)
         format_menu = self.menuBar().addMenu("&Format")
-
-        # We need references to these actions/settings to update as selection changes, so attach to self.
+        
         self.fonts = QFontComboBox()
         self.fonts.currentFontChanged.connect(self.editor.setCurrentFont)
         format_toolbar.addWidget(self.fonts)
-
         self.fontsize = QComboBox()
         self.fontsize.addItems([str(s) for s in FONT_SIZES])
-
-        # Connect to the signal producing the text of the current selection. Convert the string to float
-        # and set as the pointsize. We could also use the index + retrieve from FONT_SIZES.
         self.fontsize.currentIndexChanged[str].connect(lambda s: self.editor.setFontPointSize(float(s)) )
         format_toolbar.addWidget(self.fontsize)
-        # Menu bar stuff    
-
+         
         mainLayout.addLayout(topLayout)
         mainLayout.addLayout(middleLayout)
         mainLayout.addLayout(bottomLayout)
         centralWidget.setLayout(mainLayout)
         self.setCentralWidget(centralWidget)
-
-        
 
         self.show()
 
@@ -146,7 +140,6 @@ class CameraWidget(QWidget):
         self.camera.start()
         self.current_camera_name = self.available_cameras[i].description()
         self.save_seq = 0
-
 
 # Camera widget from openCV
 class OpenCVCamera(QWidget):
