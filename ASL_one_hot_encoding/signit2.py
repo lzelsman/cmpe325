@@ -96,10 +96,9 @@ class MainWindow(QMainWindow):
         mainLayout.addLayout(bottomLayout)
         centralWidget.setLayout(mainLayout)
         self.setCentralWidget(centralWidget)
-
-        
         self.show()
 
+    @pyqtSlot(str)
     def onUpdateText(self, text):
         cursor = self.editor.textCursor()
         cursor.movePosition(QTextCursor.End)
@@ -108,24 +107,20 @@ class MainWindow(QMainWindow):
         self.editor.ensureCursorVisible()
 
 
-class Stream(QObject):
-    newText = pyqtSignal(str)
-
-    def write(self, text):
-        self.newText.emit(str(text))  
-
 
 class CV2Video(QObject):
-    
+    # Defining signals to be sent out 
+
+    # VideoSignal sends out an image to be fed into VideoWidget
+    # TextSignal sends out a string to be sent out 
     VideoSignal = pyqtSignal(QImage)
+    TextSignal = pyqtSignal(str)
 
     def __init__(self):
         super(CV2Video, self).__init__()
 
     @pyqtSlot()
     def startVideo(self):
-        #self.camera.startCamera()
-        # sys.stdout = Stream(newText=self.onUpdateText)
         saver = tf.train.import_meta_graph(par.saved_path + str('501.meta'))
         with tf.Session() as sess:
             saver.restore(sess, tf.train.latest_checkpoint('./Saved/'))
@@ -187,7 +182,10 @@ class CV2Video(QObject):
                     for i in range(len(testY[0])):
                         if (testY[0][i] != testY_previous[0][i]) and (elapsed_time > 2):
                             if testY[0][i] == [1]:
-                                print(letters[i])
+                                # print(letters[i])
+
+                                # emit if recognized
+                                self.TextSignal.emit(str(letters[i]))
                                 start_time = time.time()
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
@@ -224,7 +222,6 @@ class VideoWidget(QWidget):
 
 
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
     app.setApplicationName("ASL to Text Editor")
 
@@ -237,6 +234,7 @@ if __name__ == '__main__':
     window = MainWindow()
 
     cv2Feed.VideoSignal.connect(window.camera.setImage)
+    cv2Feed.TextSignal.connect(window.onUpdateText)
     window.recordButton.clicked.connect(cv2Feed.startVideo)
 
  
