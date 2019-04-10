@@ -18,12 +18,6 @@ import sys
 
 import breeze_resources
 
-#app = QApplication(sys.argv)
-#file = QFile(":/dark.qss")
-#file.open(QFile.ReadOnly | QFile.Text)
-#stream = QTextStream(file)
-#app.setStyleSheet(stream.readAll())
-
 undoStack = []
 
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
