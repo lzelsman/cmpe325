@@ -24,17 +24,23 @@ import breeze_resources
 #stream = QTextStream(file)
 #app.setStyleSheet(stream.readAll())
 
-undoStack = [];
+undoStack = []
 
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+
+        self.selectedButton = 0
+        
+        # Dark Mode
         file = QFile(":/dark.qss")
         file.open(QFile.ReadOnly | QFile.Text)
         stream = QTextStream(file)
         self.setStyleSheet(stream.readAll())
+
+        # Window geometry
         self.setGeometry(50,50, 600,400) #can alternatively do 10 10 900 600
         self.setWindowTitle('ASL to Text Translator')
         
@@ -54,11 +60,18 @@ class MainWindow(QMainWindow):
         self.recordButton.setIcon(QIcon(QPixmap("./images/record-icon.png")))
         self.recordButton.setIconSize(QSize(60, 60))
         self.recordButton.setStyleSheet('QPushButton{border: none, outline: none;}')
+        self.recordButton.clicked.connect(self.changeButton)
+        self.stopButton = QPushButton()
+        self.stopButton.setIcon(QIcon(QPixmap("./images/stop-icon.png")))
+        self.stopButton.setIconSize(QSize(60, 60))
+        self.stopButton.setStyleSheet('QPushButton{border: none, outline: none;}')
+        self.stopButton.clicked.connect(self.changeButton)
         middleLayout = QHBoxLayout()
         middleLayout.addStretch()
         middleLayout.addWidget(self.recordButton)
+        middleLayout.addWidget(self.stopButton)
+        self.stopButton.hide()
         middleLayout.addStretch()
-        # recordButton.clicked.connect(self.recordHandler)
 
         # Widgets for the bottom layout
         label = QLabel("Translation")
@@ -91,13 +104,13 @@ class MainWindow(QMainWindow):
         self.addToolBar(format_toolbar)
 
         self.fonts = QFontComboBox()
-        self.fonts.currentFontChanged.connect(self.editor.setCurrentFont)
+        self.fonts.currentFontChanged.connect(self.updateTextBox)
         format_toolbar.addWidget(self.fonts)
 
         self.fontsize = QComboBox()
         self.fontsize.addItems([str(s) for s in FONT_SIZES])
 
-        self.fontsize.currentIndexChanged[str].connect(lambda s: self.editor.setFontPointSize(float(s)) )
+        self.fontsize.currentIndexChanged[str].connect(self.updateTextBox)
         format_toolbar.addWidget(self.fontsize)   
 
         mainLayout.addLayout(topLayout)
@@ -125,7 +138,29 @@ class MainWindow(QMainWindow):
         if len(undoStack) > 0:
             self.editor.textCursor().insertText(undoStack[0])
             undoStack.pop(0)
-
+            
+    @pyqtSlot()
+    def changeButton(self):
+        try:
+            if (self.selectedButton == 0):
+                self.selectedButton = 1
+                self.recordButton.hide()
+                self.stopButton.show()
+            else:
+                self.selectedButton = 0
+                self.stopButton.hide()
+                self.recordButton.show()
+        except Exception as e:
+            print (e)
+            
+    @pyqtSlot()
+    def updateTextBox(self):
+        self.editor.setCurrentFont(self.fonts.currentFont())
+        self.editor.setFontPointSize(float(self.fontsize.currentText()))
+        currentText = self.editor.toPlainText()
+        self.editor.clear()
+        self.editor.textCursor().insertText(currentText)
+        
 
 class CV2Video(QObject):
     # Defining signals to be sent out 
