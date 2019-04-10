@@ -16,11 +16,25 @@ from PIL import ImageOps, Image
 import os
 import sys
 
+import breeze_resources
+
+#app = QApplication(sys.argv)
+#file = QFile(":/dark.qss")
+#file.open(QFile.ReadOnly | QFile.Text)
+#stream = QTextStream(file)
+#app.setStyleSheet(stream.readAll())
+
+undoStack = [];
+
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+        file = QFile(":/dark.qss")
+        file.open(QFile.ReadOnly | QFile.Text)
+        stream = QTextStream(file)
+        self.setStyleSheet(stream.readAll())
         self.setGeometry(50,50, 600,400) #can alternatively do 10 10 900 600
         self.setWindowTitle('ASL to Text Translator')
         
@@ -35,11 +49,11 @@ class MainWindow(QMainWindow):
         topLayout.addWidget(self.camera)
         topLayout.addStretch()
 
-
         # The middle layout where the play button goes
         self.recordButton = QPushButton()
         self.recordButton.setIcon(QIcon(QPixmap("./images/record-icon.png")))
         self.recordButton.setIconSize(QSize(60, 60))
+        self.recordButton.setStyleSheet('QPushButton{border: none, outline: none;}')
         middleLayout = QHBoxLayout()
         middleLayout.addStretch()
         middleLayout.addWidget(self.recordButton)
@@ -53,31 +67,29 @@ class MainWindow(QMainWindow):
         bottomLayout.addWidget(label)
         bottomLayout.addWidget(self.editor)
 
-        # Generates tmenu bar
-        edit_toolbar = QToolBar("Edit")   
-        edit_menu = self.menuBar().addMenu("&Edit")
+        # Generates menu bar
+        edit_toolbar = QToolBar("Edit")
+        edit_toolbar.setIconSize(QSize(16, 16))
+        self.addToolBar(edit_toolbar)
 
         # Creating the undo menu bar
         undo_action = QAction(QIcon(os.path.join('images', 'arrow-curve-180-left.png')), "Undo", self)
         undo_action.setStatusTip("Undo last change")
-        undo_action.triggered.connect(self.editor.undo)
-        edit_menu.addAction(undo_action)
+        undo_action.triggered.connect(self.undoChar)
+        edit_toolbar.addAction(undo_action)
 
         # Creating the redo on the menu bar
         redo_action = QAction(QIcon(os.path.join('images', 'arrow-curve.png')), "Redo", self)
         redo_action.setStatusTip("Redo last change")
-        redo_action.triggered.connect(self.editor.redo)
+        redo_action.triggered.connect(self.redoChar)
         edit_toolbar.addAction(redo_action)
-        edit_menu.addAction(redo_action)
 
         
-        # Widget to tallow us to edit text size
+        # Widget to allow us to edit text size
         format_toolbar = QToolBar("Format")
         format_toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(format_toolbar)
-        format_menu = self.menuBar().addMenu("&Format")
 
-        # We need references to these actions/settings to update as selection changes, so attach to self.
         self.fonts = QFontComboBox()
         self.fonts.currentFontChanged.connect(self.editor.setCurrentFont)
         format_toolbar.addWidget(self.fonts)
@@ -85,11 +97,8 @@ class MainWindow(QMainWindow):
         self.fontsize = QComboBox()
         self.fontsize.addItems([str(s) for s in FONT_SIZES])
 
-        # Connect to the signal producing the text of the current selection. Convert the string to float
-        # and set as the pointsize. We could also use the index + retrieve from FONT_SIZES.
         self.fontsize.currentIndexChanged[str].connect(lambda s: self.editor.setFontPointSize(float(s)) )
-        format_toolbar.addWidget(self.fontsize)
-        # Menu bar stuff    
+        format_toolbar.addWidget(self.fontsize)   
 
         mainLayout.addLayout(topLayout)
         mainLayout.addLayout(middleLayout)
@@ -106,6 +115,16 @@ class MainWindow(QMainWindow):
         self.editor.setTextCursor(cursor)
         self.editor.ensureCursorVisible()
 
+    def undoChar(self):
+        if (len(self.editor.toPlainText()) > 0):
+            lastChar = self.editor.toPlainText()[-1]
+            undoStack.append(lastChar)
+            self.editor.textCursor().deletePreviousChar()
+
+    def redoChar(self):
+        if len(undoStack) > 0:
+            self.editor.textCursor().insertText(undoStack[0])
+            undoStack.pop(0)
 
 
 class CV2Video(QObject):
@@ -143,7 +162,7 @@ class CV2Video(QObject):
             count = 0
             start_time = time.time()
             letters = ["A", "B", "C", "D", "G", "I", "L", "V", "Y"]
-            cap = cv2.VideoCapture(0)
+            cap = cv2.VideoCapture(1)
             while 1:
                 ret, img = cap.read()
                 if ret:
@@ -219,7 +238,6 @@ class VideoWidget(QWidget):
         if image.size != self.size():
             self.setFixedSize(image.size())
         self.update() #update after we've resized the image
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
