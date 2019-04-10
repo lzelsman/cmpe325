@@ -197,7 +197,7 @@ class CV2Video(QObject):
             count = 0
             start_time = time.time()
             letters = ["A", "B", "C", "D", "G", "I", "L", "V", "Y"]
-            cap = cv2.VideoCapture(1)
+            cap = cv2.VideoCapture(0)
             while 1:
                 ret, img = cap.read()
                 if ret:
